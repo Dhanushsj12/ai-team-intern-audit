@@ -1,11 +1,12 @@
 # Part A4 — Recommendation Memo
 
-## Corrected headline
+## What changed after checking the results
 
-The original report's claim that Hindi has approximately 6x the tokenizer
-fertility of English is not a robust basis for a serving-cost decision.
+The original report says that Hindi has about 6x the fertility of English with
+the GPT-2 tokenizer. That result is true for the test we ran, but I would not
+use it directly to estimate serving cost.
 
-On the FLORES-derived corpus, GPT-2 produced:
+Using the larger FLORES-derived corpus, the GPT-2 results were:
 
 | Language | GPT-2 tok/word |
 |---|---:|
@@ -14,7 +15,7 @@ On the FLORES-derived corpus, GPT-2 produced:
 | Kannada | 22.95 |
 | Tamil | 24.87 |
 
-However, XLM-RoBERTa produced substantially lower Indic fertility:
+I then checked the same languages with XLM-RoBERTa:
 
 | Language | XLM-R tok/word |
 |---|---:|
@@ -23,36 +24,44 @@ However, XLM-RoBERTa produced substantially lower Indic fertility:
 | Kannada | 2.60 |
 | Tamil | 2.45 |
 
-Thus the large Indic penalty is strongly tokenizer-dependent. It should not be
-converted directly into a universal 6x Hindi serving-cost assumption.
+The difference is large. Hindi, Kannada, and Tamil are much closer to English
+with XLM-RoBERTa than they are with GPT-2. This means the original result
+depends heavily on the tokenizer being used.
 
-## Routing recommendation
+## Recommendation
 
-Do not route all Indic traffic based solely on the original GPT-2 fertility
-numbers.
+I would not route Indic traffic just because the GPT-2 numbers are high.
 
-Instead, evaluate a multilingual/Indic-aware tokenizer and model using
-representative production requests. Routing should ultimately be based on
-actual model tokens processed per request, together with quality and latency.
+Before making a production routing decision, I would test the candidate
+model/tokenizer combinations with requests that are similar to real traffic.
+The main thing I would compare is the actual number of model tokens processed
+per request. I would also check quality and latency before choosing a model.
 
-XLM-RoBERTa is strong evidence that an Indic-aware tokenizer can substantially
-reduce the tokenization gap, but tokenizer fertility alone does not establish
-that it is the best production model.
+XLM-RoBERTa gives a good indication that using a tokenizer designed for
+multiple languages can reduce the tokenization gap. However, the fertility
+numbers alone are not enough to say that XLM-RoBERTa is the best production
+choice.
 
-## Biggest caveat
+## Main limitation
 
-The FLORES-derived evaluation set is much better than the original ~10-sentence
-smoke test, but it is still a limited benchmark. Its domain and sentence
-distribution may not represent our production traffic. The analysis therefore
-cannot establish production serving cost or conversational quality.
+The FLORES-derived corpus is much larger than the original small test, so it
+gives us a better measurement. But it is still not the same as production
+traffic.
 
-## Production metric
+The sentences and domain may be different from the requests the system will
+actually receive. Because of this, these results cannot by themselves tell us
+the production cost or the quality of responses.
 
-The single metric I would monitor is:
+## Metric I would monitor in production
 
-**actual model tokens processed per request, split into prompt and generation
-tokens by language.**
+I would monitor:
 
-This directly connects the tokenizer analysis to serving capacity and cost.
-A persistent unexpected increase in tokens/request for an Indic language would
-be an early signal that the routing assumption is wrong.
+**actual model tokens processed per request, separated into prompt and
+generation tokens by language.**
+
+This is more directly connected to serving cost than tokens per whitespace
+word.
+
+If the number of tokens per request for an Indic language stays much higher
+than expected, that would be a useful signal to investigate the tokenizer,
+model choice, or routing decision.

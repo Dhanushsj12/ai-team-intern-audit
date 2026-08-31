@@ -2,30 +2,39 @@
 
 ## Dataset
 
-I used the FLORES-200 dataset and selected the English, Hindi,
-Kannada, and Tamil development sets.
+I used the FLORES-200 dataset and selected the development files for four
+languages:
 
-Languages:
-- English (eng_Latn)
-- Hindi (hin_Deva)
-- Kannada (kan_Knda)
-- Tamil (tam_Taml)
+- English (`eng_Latn`)
+- Hindi (`hin_Deva`)
+- Kannada (`kan_Knda`)
+- Tamil (`tam_Taml`)
 
-The selected corpus contains parallel multilingual sentences.
+The four files contain parallel sentences from the same development data.
 
 ## Preprocessing
 
-The selected language files were copied into `partA/corpus/` and
-renamed to `eng.txt`, `hin.txt`, `kan.txt`, and `tam.txt`.
+I copied the selected files into:
 
-The existing fertility script performs NFC normalization and
-lowercasing before tokenization.
+`partA/corpus/`
 
-No additional linguistic preprocessing was applied.
+and renamed them as:
 
-## Initial measurement
+- `eng.txt`
+- `hin.txt`
+- `kan.txt`
+- `tam.txt`
 
-Using the existing `fertility.py` with the GPT-2 tokenizer:
+The existing `fertility.py` script removes empty lines, applies NFC
+normalization and converts the text to lowercase before tokenization.
+
+I did not apply any other language-specific preprocessing.
+
+## Initial GPT-2 measurement
+
+I first ran the existing `fertility.py` script using the GPT-2 tokenizer.
+
+The output was:
 
 | Language | Fertility (tok/word) | Tok/char |
 |---|---:|---:|
@@ -34,13 +43,16 @@ Using the existing `fertility.py` with the GPT-2 tokenizer:
 | Kannada | 22.95 | 2.655 |
 | Tamil | 24.87 | 2.717 |
 
-These numbers are an initial measurement, not the final conclusion.
+These were the initial numbers I used for the later checks.
 
 ## Limitations
 
-The FLORES development corpus is still a limited evaluation set and
-does not represent all real production traffic. Its sentences are
-primarily translated/curated evaluation text rather than naturally
-occurring conversational requests. Therefore these measurements may
-not predict fertility for every domain, writing style, or production
-workload.
+The FLORES development data is larger than the small initial test, but it is
+still an evaluation dataset.
+
+It does not contain every type of text that could appear in production.
+For example, real requests may have different domains, writing styles and
+sentence lengths.
+
+Because of this, these results should not be treated as an exact prediction
+of production token usage or serving cost.

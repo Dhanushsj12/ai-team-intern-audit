@@ -246,3 +246,24 @@ cache utilization approaches its limit. A corresponding increase in
 recomputation/scheduler work would further confirm that KV pressure, rather
 than simply insufficient raw compute, is responsible for the throughput
 collapse.
+
+
+# Part B — Capacity Reconciliation
+
+## B1. KV-cache capacity
+
+The model details are:
+
+- Layers = 28
+- KV heads = 8
+- Head dimension = 128
+- KV precision = FP16 = 2 bytes/value
+
+Each token needs one K vector and one V vector.
+
+So:
+
+```text
+KV bytes/token
+= 28 × 2 × 8 × 128 × 2
+= 114,688 bytes/token

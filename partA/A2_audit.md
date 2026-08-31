@@ -1,70 +1,32 @@
-# A2 — fertility.py Audit
+# A2 — Tokenizer Script and Metric Audit
 
-## 1. Conceptual problem: tokens per whitespace word
+## Summary
 
-The script reports tokenizer fertility as tokens per whitespace-delimited word.
-This denominator is not language-neutral because whitespace word counts depend on
-the writing system and tokenization conventions.
+I checked the fertility script and compared its results with some additional
+calculations.
 
-On the FLORES-derived corpus, the results were:
+I found two things worth noting:
 
-| Language | Tokens | Whitespace words | Graphemes | Tok/word | Tok/grapheme |
-|---|---:|---:|---:|---:|---:|
-| English | 26,696 | 20,954 | 125,194 | 1.274 | 0.213 |
-| Hindi | 191,842 | 24,607 | 82,404 | 7.796 | 2.328 |
-| Kannada | 349,802 | 15,430 | 86,177 | 22.670 | 4.059 |
-| Tamil | 397,189 | 16,134 | 94,467 | 24.618 | 4.205 |
+1. The script takes the fertility value for each line and then averages those
+   values. This is slightly different from calculating total tokens divided by
+   total words for the whole corpus.
 
-The denominator therefore changes the apparent cross-language comparison
-substantially. Grapheme-normalized measurements are useful as a diagnostic,
-but neither metric alone directly represents serving cost.
+2. The script uses whitespace-separated words as the denominator. This makes
+   comparisons between languages less straightforward because the number of
+   whitespace words is different across the languages.
 
-## 2. Code issue: split(" ")
+I also checked the lowercasing step. It changes the text before tokenization,
+but it is done for every language, so I did not treat it as a bug.
 
-The script uses `line.split(" ")` rather than `line.split()`.
+---
 
-Measured totals:
+## Finding 1 — Per-line averaging
 
-| Language | split(" ") | split() | Difference |
-|---|---:|---:|---:|
-| English | 20,955 | 20,954 | +1 |
-| Hindi | 24,616 | 24,607 | +9 |
+In `fertility.py`, the script does this:
 
-This is a real but small distortion on this corpus. It should not be treated as
-the main source of the reported cross-language gap.
+```python
+per_line_fertility.append(len(tokens) / len(words))
 
-## 3. Language-dependent effect of lowercasing
+...
 
-The script lowercases every line before tokenization.
-
-| Language | Original tokens | Lowercase tokens | Change |
-|---|---:|---:|---:|
-| English | 25,741 | 26,696 | +955 (+3.71%) |
-| Hindi | 191,589 | 191,603 | +14 (+0.007%) |
-| Kannada | 349,823 | 349,853 | +30 (+0.009%) |
-| Tamil | 397,169 | 397,195 | +26 (+0.007%) |
-
-Lowercasing therefore changes GPT-2 token counts substantially for English but
-only minimally for the Indic languages tested. It introduces a language-dependent
-preprocessing effect.
-
-## 4. NFC normalization
-
-NFC normalization also changes token counts in the corpus:
-
-| Language | Raw tokens | NFC tokens | Change |
-|---|---:|---:|---:|
-| English | 25,741 | 25,741 | 0 |
-| Hindi | 191,589 | 191,828 | +239 (+0.125%) |
-| Kannada | 349,823 | 349,772 | -51 (-0.015%) |
-| Tamil | 397,169 | 397,163 | -6 (-0.002%) |
-
-The effect is measurable but small relative to the large cross-language
-differences.
-
-## 5. Suspicious but harmless
-
-`random.seed(1337)` looks suspicious because the script contains no random
-sampling or other use of the `random` module. It therefore has no effect on
-the reported results. It is unnecessary/dead code, but it is not a measurement
-bug.
+return sum(per_line_fertility) / n

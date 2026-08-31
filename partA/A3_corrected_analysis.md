@@ -1,49 +1,61 @@
 # A3 — Corrected Analysis
 
-## Objective
+## What I checked
 
-The original report compares languages using GPT-2 tokenizer fertility measured as
-tokens per whitespace-delimited word. This section repeats the comparison on the
-larger FLORES-derived corpus using two tokenizers and two denominators.
+The original result compared the languages using GPT-2 and tokens per
+whitespace-separated word.
+
+I repeated the test on the larger FLORES-derived corpus and also checked the
+results using XLM-RoBERTa. I looked at tokens per word and tokens per grapheme.
 
 ## Corpus
 
-The evaluation uses FLORES-derived development data for four languages:
+I used the FLORES-derived development data for:
 
 - English
 - Hindi
 - Kannada
 - Tamil
 
-The corpus contains 1,012 lines per language in the selected development split.
-The same parallel sentence positions are used across languages.
+There are 1,012 lines for each language in the selected development data.
 
-Preprocessing follows the existing script where applicable: UTF-8 input, removal
-of empty lines, NFC normalization, and lowercasing for the fertility measurements.
+The files were read as UTF-8 text. Empty lines were skipped and the text was
+NFC-normalized. The fertility script also converts the text to lowercase before
+tokenization.
 
-## Tokenizer comparison
+## GPT-2 and XLM-R results
 
-### Tokens per whitespace word
+The GPT-2 results were:
 
-| Language | GPT-2 | XLM-RoBERTa |
-|---|---:|---:|
-| English | 1.28 | 1.42 |
-| Hindi | 7.83 | 1.50 |
-| Kannada | 22.95 | 2.60 |
-| Tamil | 24.87 | 2.45 |
+| Language | GPT-2 tok/word |
+|---|---:|
+| English | 1.28 |
+| Hindi | 7.83 |
+| Kannada | 22.95 |
+| Tamil | 24.87 |
 
-GPT-2 shows a very large Indic-language penalty, while XLM-RoBERTa substantially
-reduces the token count for Hindi, Kannada, and Tamil.
+I then ran the same corpus with XLM-RoBERTa:
 
-Relative to GPT-2, the XLM-RoBERTa tokenizer reduces tok/word by approximately:
+| Language | XLM-R tok/word |
+|---|---:|
+| English | 1.42 |
+| Hindi | 1.50 |
+| Kannada | 2.60 |
+| Tamil | 2.45 |
 
-- Hindi: 7.83 -> 1.50, about 81% lower
-- Kannada: 22.95 -> 2.60, about 89% lower
-- Tamil: 24.87 -> 2.45, about 90% lower
+The results changed a lot when the tokenizer was changed. With GPT-2, the
+Indic-language values were much higher. With XLM-RoBERTa, the difference was
+much smaller.
 
-## Second denominator: grapheme clusters
+Compared with GPT-2, the XLM-RoBERTa tok/word value was approximately:
 
-For XLM-RoBERTa, token counts and grapheme counts were measured independently:
+- Hindi: 81% lower
+- Kannada: 89% lower
+- Tamil: 90% lower
+
+## Tokens per grapheme
+
+I also checked the XLM-RoBERTa token count against grapheme clusters.
 
 | Language | XLM-R tokens | Graphemes | XLM-R tok/grapheme |
 |---|---:|---:|---:|
@@ -52,44 +64,37 @@ For XLM-RoBERTa, token counts and grapheme counts were measured independently:
 | Kannada | 39,625 | 86,177 | 0.460 |
 | Tamil | 39,087 | 94,467 | 0.414 |
 
-Grapheme-normalized measurements confirm that the tokenizer behavior differs
-across languages, but they do not directly represent serving cost.
+This gives another way to compare the tokenization results. It also shows that
+the choice of denominator affects the comparison.
 
-## Which number should drive routing and cost?
+## What should be used for cost and routing?
 
-The single number that should drive a routing-and-cost decision is:
+I would not use tokens per word or tokens per grapheme as the final production
+cost number.
 
-**model tokens processed per production request**, measured separately for prompt
-and generation tokens where possible.
+For production, I would check the actual number of model tokens processed for
+each request. Prompt tokens and generated tokens should be tracked separately
+when possible.
 
-The reason is that serving cost and capacity are determined by the number of
-tokens actually processed by the model. Tok/word and tok/grapheme are useful
-diagnostic measures for understanding tokenizer behavior, but their denominators
-are language-dependent and do not directly correspond to the workload that the
-serving system must execute.
+This is more useful for cost and capacity planning because it measures the
+tokens that the model actually processes.
 
-For routing decisions, I would therefore measure representative production
-requests for each language and compare their actual token counts under the
-candidate tokenizer/model. The tokenizer with lower production token counts
-should generally have lower token-processing cost, subject to model quality and
-latency constraints.
+The tokenizer with fewer tokens is not automatically the best choice. Model
+quality, latency and the actual serving setup also need to be checked.
 
-## Corrected conclusion
+## Conclusion
 
-The original headline that Hindi is approximately 6x worse than English is not
-a robust basis for a serving-cost decision. It is strongly dependent on the
-choice of tokenizer and denominator.
+The original statement that Hindi is about 6x worse than English is based on
+the GPT-2 result. It should not be treated as a general serving-cost number.
 
-On the larger corpus, GPT-2 produces extremely high fertility for the Indic
-languages, whereas XLM-RoBERTa produces much smaller gaps:
+The XLM-RoBERTa results were much closer:
 
 - Hindi: 1.06x English
 - Kannada: 1.83x English
 - Tamil: 1.73x English
 
-This demonstrates that the large GPT-2 penalty is substantially tokenizer
-dependent rather than a universal property of Indic scripts.
+So the large GPT-2 difference depends heavily on the tokenizer being used.
 
-The appropriate next step is therefore not to budget a universal 6x Hindi
-serving penalty, but to benchmark candidate tokenizers/models using
-representative production workloads and actual tokens processed per request.
+Before making a production routing decision, I would test the candidate models
+with requests that are closer to actual production traffic and compare their
+real tokens per request.
