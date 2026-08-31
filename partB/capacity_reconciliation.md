@@ -249,21 +249,79 @@ collapse.
 
 
 # Part B — Capacity Reconciliation
+## B1 — KV-cache capacity
 
-## B1. KV-cache capacity
-
-The model details are:
+The model has:
 
 - Layers = 28
 - KV heads = 8
 - Head dimension = 128
 - KV precision = FP16 = 2 bytes/value
 
-Each token needs one K vector and one V vector.
+Each token stores both a K and V vector.
 
-So:
+Therefore:
 
-```text
 KV bytes/token
+= layers × 2 (K and V) × KV heads × head_dim × 2 bytes
+
 = 28 × 2 × 8 × 128 × 2
+
 = 114,688 bytes/token
+
+Therefore:
+
+**KV cache = 114,688 bytes/token = 112 KiB/token.**
+
+For a 4096-token sequence:
+
+114,688 × 4096
+= 469,762,048 bytes
+≈ 448 MiB
+
+The GPU has 24 GB of memory and the serving configuration uses:
+
+24 × 0.92 = 22.08 GB
+
+The model weights also need to fit in this memory. With 4.2B parameters
+stored in FP16:
+
+4.2B × 2 bytes
+= 8.4 GB
+
+Using the stated approximate 1.6 GB non-KV runtime overhead, the memory
+available for KV cache is approximately:
+
+22.08 - 8.4 - 1.6
+= 12.08 GB
+
+Using the per-sequence KV requirement:
+
+12.08 × 10^9 / 469,762,048
+≈ 25.7
+
+This gives an approximate capacity of **25 complete 4096-token sequences**.
+
+This is an estimate rather than an exact scheduler limit because the actual
+serving system allocates KV cache in blocks and may reserve additional memory.
+
+### Check against the benchmark log
+
+The long-context sweep uses 3584-token prompts and 512 generated tokens,
+so each request reaches the configured 4096-token maximum.
+
+Relevant rows are:
+
+| Batch | KV utilization | Preempted sequences |
+|---:|---:|---:|
+| 24 | 0.93 | 0 |
+| 32 | 0.97 | 7 |
+| 48 | 0.97 | 23 |
+
+The estimate is consistent with the observed behavior. Batch 24 completes
+without preemptions, while preemptions appear at batch 32 and become more
+frequent at batch 48.
+
+The estimate should not be treated as an exact scheduler threshold because
+KV allocation is block-based and the reported utilization is a peak
+utilization metric rather than a direct measurement of allocated bytes.

@@ -2,31 +2,29 @@
 
 ## Summary
 
-I checked the fertility script and compared its results with some additional
-calculations.
+I checked `fertility.py` and compared its line-level fertility calculation
+with a corpus-level calculation using the same GPT-2 tokenizer and the same
+corpus files.
 
-I found two things worth noting:
+There are two important metric issues:
 
-1. The script takes the fertility value for each line and then averages those
-   values. This is slightly different from calculating total tokens divided by
-   total words for the whole corpus.
+1. The script calculates fertility separately for each line and then takes
+   the arithmetic mean. This is not the same as total tokens divided by total
+   words across the corpus.
+2. The script uses whitespace-separated words as the denominator. This is a
+   simple metric, but it is not a consistent measure of linguistic content
+   across different languages and scripts.
 
-2. The script uses whitespace-separated words as the denominator. This makes
-   comparisons between languages less straightforward because the number of
-   whitespace words is different across the languages.
-
-I also checked the lowercasing step. It changes the text before tokenization,
-but it is done for every language, so I did not treat it as a bug.
+I also checked the lowercasing step. The script lowercases every language
+before tokenization, so the transformation is applied consistently. I
+therefore do not treat lowercasing as a demonstrated bug.
 
 ---
 
 ## Finding 1 — Per-line averaging
 
-In `fertility.py`, the script does this:
+In `fertility.py`, fertility is calculated separately for every non-empty
+line:
 
 ```python
 per_line_fertility.append(len(tokens) / len(words))
-
-...
-
-return sum(per_line_fertility) / n

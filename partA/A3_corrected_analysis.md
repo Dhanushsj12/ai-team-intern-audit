@@ -43,15 +43,18 @@ I then ran the same corpus with XLM-RoBERTa:
 | Kannada | 2.60 |
 | Tamil | 2.45 |
 
-The results changed a lot when the tokenizer was changed. With GPT-2, the
-Indic-language values were much higher. With XLM-RoBERTa, the difference was
-much smaller.
+The results changed substantially when the tokenizer was changed. With GPT-2,
+the Indic-language values were much higher. With XLM-RoBERTa, the difference
+was much smaller.
 
 Compared with GPT-2, the XLM-RoBERTa tok/word value was approximately:
 
 - Hindi: 81% lower
 - Kannada: 89% lower
 - Tamil: 90% lower
+
+This shows that the original conclusion is highly dependent on the tokenizer
+used.
 
 ## Tokens per grapheme
 
@@ -69,32 +72,64 @@ the choice of denominator affects the comparison.
 
 ## What should be used for cost and routing?
 
-I would not use tokens per word or tokens per grapheme as the final production
-cost number.
+I would not use tokens per whitespace-separated word or tokens per grapheme as
+the final production cost metric.
 
-For production, I would check the actual number of model tokens processed for
-each request. Prompt tokens and generated tokens should be tracked separately
-when possible.
+For a production cost and routing decision, the most useful number is:
 
-This is more useful for cost and capacity planning because it measures the
-tokens that the model actually processes.
+**actual model tokens processed per request, separated into prompt tokens and
+generated tokens.**
 
-The tokenizer with fewer tokens is not automatically the best choice. Model
-quality, latency and the actual serving setup also need to be checked.
+This denominator is preferable because it directly measures the tokens that
+the serving system actually processes. It therefore connects more directly to
+model compute, KV-cache usage, latency, and serving cost.
 
-## Conclusion
+For a fair cross-language comparison, the evaluation set should also contain
+equivalent parallel requests or otherwise hold the underlying task/information
+content approximately constant. A whitespace-separated word is not a
+consistent unit of information across different languages and scripts.
 
-The original statement that Hindi is about 6x worse than English is based on
-the GPT-2 result. It should not be treated as a general serving-cost number.
+Tokens per grapheme can be useful as a diagnostic metric for understanding
+tokenization behavior, but it should not be treated as the production cost
+metric.
 
-The XLM-RoBERTa results were much closer:
+## Routing implication
+
+I would not route Indic-language traffic to a different model solely because
+the GPT-2 fertility numbers are high.
+
+The XLM-RoBERTa results show why. On this corpus, the XLM-RoBERTa tok/word
+ratios relative to English are approximately:
 
 - Hindi: 1.06x English
 - Kannada: 1.83x English
 - Tamil: 1.73x English
 
-So the large GPT-2 difference depends heavily on the tokenizer being used.
+These are substantially different from the GPT-2 comparison.
 
-Before making a production routing decision, I would test the candidate models
-with requests that are closer to actual production traffic and compare their
-real tokens per request.
+However, a tokenizer with fewer tokens is not automatically the best production
+choice. Model quality, latency, memory usage, and serving behavior also need
+to be considered.
+
+Before making a production routing decision, I would evaluate the candidate
+model/tokenizer combinations using requests that are representative of actual
+production traffic and measure the real prompt and generation token counts per
+request.
+
+## Conclusion
+
+The original statement that Hindi is about 6x worse than English is valid for
+the specific GPT-2 tok/word measurement that was performed, but it should not
+be treated as a general serving-cost number.
+
+The larger FLORES-derived evaluation and the XLM-RoBERTa comparison show that
+the observed language gap depends heavily on the tokenizer.
+
+For production cost and routing decisions, I would therefore use actual model
+tokens processed per request, with prompt and generated tokens tracked
+separately when possible, and evaluate this metric on traffic that is
+representative of the intended workload.
+
+The tokenizer result should be treated as evidence about tokenization behavior,
+not by itself as evidence that one language requires a particular routing
+policy.
