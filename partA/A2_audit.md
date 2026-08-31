@@ -2,18 +2,19 @@
 
 ## Summary
 
-I checked `fertility.py` and compared its line-level fertility calculation
+I audited `fertility.py` and compared its line-level fertility calculation
 with a corpus-level calculation using the same GPT-2 tokenizer and the same
 corpus files.
 
-There are two important metric issues:
+I found two metric issues that affect interpretation of the original result:
 
 1. The script calculates fertility separately for each line and then takes
-   the arithmetic mean. This is not the same as total tokens divided by total
-   words across the corpus.
-2. The script uses whitespace-separated words as the denominator. This is a
-   simple metric, but it is not a consistent measure of linguistic content
-   across different languages and scripts.
+   the arithmetic mean. This is not the same as calculating total tokens
+   divided by total words across the entire corpus.
+2. The script uses whitespace-separated words as the denominator. This is
+   simple to compute, but whitespace-separated word counts are not a
+   consistent unit of linguistic content across different languages and
+   scripts.
 
 I also checked the lowercasing step. The script lowercases every language
 before tokenization, so the transformation is applied consistently. I
