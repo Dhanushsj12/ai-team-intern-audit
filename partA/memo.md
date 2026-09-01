@@ -19,10 +19,10 @@ I then checked the same languages with XLM-RoBERTa:
 
 | Language | XLM-R tok/word |
 |---|---:|
-| English | 1.42 |
-| Hindi | 1.50 |
-| Kannada | 2.60 |
-| Tamil | 2.45 |
+| English | 1.38 |
+| Hindi | 1.49 |
+| Kannada | 2.57 |
+| Tamil | 2.42 |
 
 The difference is large. Hindi, Kannada, and Tamil are much closer to English
 with XLM-RoBERTa than they are with GPT-2. This means the original result

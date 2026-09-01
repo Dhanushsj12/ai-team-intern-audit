@@ -38,10 +38,10 @@ I then ran the same corpus with XLM-RoBERTa:
 
 | Language | XLM-R tok/word |
 |---|---:|
-| English | 1.42 |
-| Hindi | 1.50 |
-| Kannada | 2.60 |
-| Tamil | 2.45 |
+| English | 1.38 |
+| Hindi | 1.49 |
+| Kannada | 2.57 |
+| Tamil | 2.42 |
 
 The results changed substantially when the tokenizer was changed. With GPT-2,
 the Indic-language values were much higher. With XLM-RoBERTa, the difference
