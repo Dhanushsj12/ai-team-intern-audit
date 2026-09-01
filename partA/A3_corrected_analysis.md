@@ -17,7 +17,7 @@ I used the FLORES-derived development data for:
 - Kannada
 - Tamil
 
-There are 1,012 lines for each language in the selected development data.
+There are 997 lines for each language in the selected development data.
 
 The files were read as UTF-8 text. Empty lines were skipped and the text was
 NFC-normalized. The fertility script also converts the text to lowercase before

@@ -38,4 +38,4 @@ Column notes:
 - `itl_ms_p50` — median inter-token latency during decode
 - `e2e_ms_p95` — p95 end-to-end request latency
 - `preempted_seqs` — sequences the scheduler preempted at least once
-- `kv_cache_util` — peak KV cache block utilization
+- `kv_cache_util` — peak KV cache block utilizationGet-Content partA\corpus\kan.txt -TotalCount 5
