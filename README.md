@@ -307,6 +307,22 @@ These are the screenshots backing the numbers above, in the order they're refere
 
 ![KV-Cache Pressure](submission/screenshots/09_kv_cache_pressure.png)
 
+### XLM-R Cross-Check
+
+![XLM-R Cross-Check](submission/screenshots/05_xlmr_cross_check.png)
+
+### XLM-R Fertility Graph
+
+![XLM-R Fertility Graph](submission/screenshots/06_xlmr_fertility_graph.png)
+
+### GPT-2 vs XLM-R Tokenizer Comparison
+
+![GPT-2 vs XLM-R Tokenizer Comparison](submission/screenshots/07_tokenizer_comparison_graph.png)
+
+### Long-Context Throughput
+
+![Long-Context Throughput](submission/screenshots/08_long_context_throughput_graph.png)
+
 ---
 
 # Commands and Reproduction Steps
