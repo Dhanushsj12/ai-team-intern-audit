@@ -4,6 +4,8 @@ This repository contains the analysis and decision work I did for the FlamAI AI 
 
 The work covers multilingual tokenizer behavior, serving capacity, throughput, benchmark validation, and my final recommendation for the proposed multilingual casual-style change.
 
+REPORT:https://drive.google.com/file/d/1t3ADQfpnogWqfGsN47tnORlT2DO5SQT0/view?usp=drivesdk
+
 ---
 
 ## How I approached this
